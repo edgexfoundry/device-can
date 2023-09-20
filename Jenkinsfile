@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (C) 2023 HCL Technologies Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 //
 
 edgeXBuildCApp (
-    project: 'device-can-c',
+    project: 'device-can',
     dockerBuildFilePath: 'scripts/Dockerfile.alpine-base',
     dockerFilePath: 'scripts/Dockerfile.alpine'
 )

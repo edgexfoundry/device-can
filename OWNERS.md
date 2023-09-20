@@ -4,5 +4,5 @@ This repository is managed by the EdgeX Device Services Working Group.  As such,
 
 See the [project Wiki TSC page](https://wiki.edgexfoundry.org/pages/viewpage.action?pageId=329436#TechnicalSteeringCommittee(TSC)-WorkingGroups) for information on the current EdgeX TSC and who occupies the role of Device Service Working Group chair.
 
-For a complete list of current committers see:  https://github.com/orgs/edgexfoundry/teams/device-bacnet-c-committers/members.
+For a complete list of current committers see:  https://github.com/orgs/edgexfoundry/teams/device-can-committers/members.
 

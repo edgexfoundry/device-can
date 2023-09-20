@@ -1,10 +1,10 @@
 
 .PHONY: build test clean docker
 
-MICROSERVICES=build/release/device-can-c/device-can-c
+MICROSERVICES=build/release/device-can/device-can
 .PHONY: $(MICROSERVICES)
 
-DOCKERS=docker_device_can_c
+DOCKERS=docker_device_can
 .PHONY: $(DOCKERS)
 
 VERSION=$(shell cat ./VERSION || echo 0.0.0)
@@ -12,7 +12,7 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 build: ./VERSION ${MICROSERVICES}
 
-build/release/device-can-c/device-can-c:
+build/release/device-can/device-can:
 	    scripts/build.sh
 
 test:
@@ -30,10 +30,10 @@ version: ./VERSION
 
 docker: ./VERSION $(DOCKERS)
 
-docker_device_can_c:
+docker_device_can:
 	    docker build \
 	        -f scripts/Dockerfile.alpine \
 	        --label "git_sha=$(GIT_SHA)" \
-	        -t edgexfoundry/device-bacnet:${GIT_SHA} \
-	        -t edgexfoundry/device-bacnet:${VERSION}-dev \
+	        -t edgexfoundry/device-can:${GIT_SHA} \
+	        -t edgexfoundry/device-can:${VERSION}-dev \
             .

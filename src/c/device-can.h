@@ -9,8 +9,8 @@
  *
  * CONTRIBUTORS              COMPANY
 ===============================================================
- 1. Sathya Durai           HCL Technologies (EPL Team)
- 2. Vijay Annamalaisamy    HCL Technologies (EPL Team)
+ 1. Sathya Durai           HCL Technologies Ltd (EPL Team)
+ 2. Vijay Annamalaisamy    HCL Technologies Ltd (EPL Team)
 */
 
 #ifndef _DEVICE_CAN_H_
@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 /**
- * device-can-c specific data included with service callbacks
+ * device-can specific data included with service callbacks
  */
 typedef struct can_driver {
   iot_logger_t *lc;

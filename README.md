@@ -29,7 +29,7 @@ Device service for CAN protocol written in C using socketcan. This service is de
 ## CAN Device Service Overview
 - Socketcan is used
 - The link - https://docs.kernel.org/networking/can.html#motivation-why-using-the-socket-api mentions why socketcan is preferred over character device-based driver
-- C – device-sdk-c is used. Version - 3.0.2
+- C – device-sdk-c is used.
 - CAN interface name and message filter can be configured in service configuration file
 - This version supports the basic can read and write functionality
 - struct can_frame is the data format of socketcan.
@@ -81,7 +81,7 @@ Ensure other EdgeX services are already running.
 Once the build is completed and interfaces are enabled, run the executable with the below commands
 
 export EDGEX_SECURITY_SECRET_STORE=false
-./build/release/device-can-c
+./build/release/device-can
 
 ### Test with Core Commands
 

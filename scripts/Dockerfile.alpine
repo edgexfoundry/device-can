@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 IOTech Ltd
+# Copyright (C) 2023 HCL Technologies Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,15 +20,15 @@ RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/reposit
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
 RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev paho-mqtt-c-dev-1.3 hiredis-dev libcbor-dev iotech-iot-1.5-dev
 
-COPY scripts /device-can-c/scripts
-COPY src /device-can-c/src/
-COPY VERSION /device-can-c/
+COPY scripts /device-can/scripts
+COPY src /device-can/src/
+COPY VERSION /device-can/
 
-WORKDIR /device-can-c
+WORKDIR /device-can
 
-RUN /device-can-c/scripts/build_deps.sh
+RUN /device-can/scripts/build_deps.sh
 
-RUN /device-can-c/scripts/build.sh 
+RUN /device-can/scripts/build.sh 
 
 FROM alpine:3.16
 MAINTAINER iotech <support@iotechsys.com>
@@ -36,7 +36,7 @@ RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/reposit
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
 RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid paho-mqtt-c-dev-1.3 hiredis libcbor iotech-iot-1.5
 
-COPY --from=builder /device-can-c/build/release/ /
+COPY --from=builder /device-can/build/release/ /
 COPY --from=builder /usr/lib/libcsdk.so /usr/lib
 COPY --from=builder /usr/share/doc/edgex-csdk /usr/share/doc/edgex-csdk
 
@@ -46,8 +46,8 @@ COPY res /res
 COPY sample-profiles /sample-profiles
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2019-2022: IoTech Ltd'
+      copyright='Copyright (c) 2023 HCL Technologies Ltd'
 
 EXPOSE 59980
-ENTRYPOINT ["/device-can-c"]
+ENTRYPOINT ["/device-can"]
 CMD ["-cp=consul://edgex-core-consul:8500", "--registry", "--confdir=/res"]

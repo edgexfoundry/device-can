@@ -60,7 +60,7 @@ SecretStore:
   RootCaCertPath: ""
   ServerName: ""
   # Uncomment to seed service secrets file
-  # SecretsFile = "/tmp/edgex/secrets/device-bacnet/secrets.json"
+  # SecretsFile = "/tmp/edgex/secrets/device-can/secrets.json"
   DisableScrubSecretsFile: false
   Authentication:
     AuthType: "X-Vault-Token"

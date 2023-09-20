@@ -9,8 +9,8 @@
  *
  * CONTRIBUTORS              COMPANY
 ===============================================================
- 1. Sathya Durai           HCL Technologies (EPL Team)
- 2. Vijay Annamalaisamy    HCL Technologies (EPL Team)
+ 1. Sathya Durai           HCL Technologies Ltd (EPL Team)
+ 2. Vijay Annamalaisamy    HCL Technologies Ltd (EPL Team)
 */
 
 #include <stdio.h>
