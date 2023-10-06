@@ -26,7 +26,7 @@ COPY VERSION /device-can/
 
 WORKDIR /device-can
 
-RUN /device-can/scripts/build_deps.sh
+RUN /device-can/scripts/build_deps.sh 1
 
 RUN /device-can/scripts/build.sh 
 
@@ -43,7 +43,6 @@ COPY --from=builder /usr/share/doc/edgex-csdk /usr/share/doc/edgex-csdk
 COPY LICENSE /.
 COPY Attribution.txt /.
 COPY res /res
-COPY sample-profiles /sample-profiles
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2023 HCL Technologies Ltd'

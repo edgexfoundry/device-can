@@ -56,6 +56,10 @@ script.
 
 Before running the service, ensure to configure CAN interfaces as below:
 
+### Install SocketCAN
+
+- sudo apt-get install can-utils
+
 ### Virtual CAN
 
 - modprobe vcan 
@@ -64,6 +68,7 @@ Before running the service, ensure to configure CAN interfaces as below:
 
 ### MCP2515 CAN Controller
 
+- modprobe can
 - ip link set can0 type can bitrate 125000 triple-sampling on restart-ms 100 
 - sudo ip link set can0 type can loopback on 
 - sudo ip link set up can0 

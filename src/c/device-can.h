@@ -18,7 +18,7 @@
 
 /**
  * @file
- * @brief Defines common artifacts for the CoAP device service.
+ * @brief Defines common artifacts for the CAN device service.
  */
 
 #include <devsdk/devsdk.h>

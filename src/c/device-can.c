@@ -13,15 +13,8 @@
  2. Vijay Annamalaisamy    HCL Technologies Ltd (EPL Team)
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <sys/types.h>
-
 #include <net/if.h>
+#include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
@@ -33,8 +26,6 @@
 #include <iot/data.h>
 #include "device-can.h"
 
-#include <stdarg.h>
-#include <unistd.h>
 #include <execinfo.h>
 
 #include "devsdk/devsdk.h"
@@ -52,7 +43,6 @@
 #define TIMEOUT "Timeout"
 
 can_driver *impl;
-iot_data_t *can_resp_data;
 int sock_fd;
 
 /* variable to control the service execution */
@@ -370,6 +360,7 @@ int main(int argc, char *argv[]) {
 	devsdk_service_free(service);
 	iot_data_free(driver_map);
 	free(impl);
+	free(canImpls);
 	puts("Exiting gracefully");
 	return 0;
 }
