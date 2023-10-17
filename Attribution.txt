@@ -6,24 +6,3 @@ https://github.com/linux-can/can-utils/tree/master/LICENSES
 edgexfoundry/device-sdk-c (Apache 2.0) https://github.com/edgexfoundry/device-sdk-c/v3.0.2
 https://github.com/edgexfoundry/device-sdk-c/blob/main/LICENSE
 
-edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts/v3
-https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
-
-edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry/v3
-https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
-
-edgexfoundry/device-sdk-go (Apache 2.0) https://github.com/edgexfoundry/device-sdk-go/v3
-https://github.com/edgexfoundry/device-sdk-go/blob/master/LICENSE
-
-edgexfoundry/go-mod-bootstrap (Apache 2.0) https://github.com/edgexfoundry/go-mod-bootstrap/v3
-https://github.com/edgexfoundry/go-mod-bootstrap/blob/master/LICENSE
-
-edgexfoundry/go-mod-secrets (Apache 2.0) https://github.com/edgexfoundry/go-mod-secrets/v3
-https://github.com/edgexfoundry/go-mod-secrets/blob/master/LICENSE
-
-edgexfoundry/go-mod-configuration (Apache 2.0) https://github.com/edgexfoundry/go-mod-configuration/v3
-https://github.com/edgexfoundry/go-mod-configuration/blob/master/LICENSE
-
-edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging/v3
-https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
-
