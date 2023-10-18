@@ -1,0 +1,52 @@
+#
+# Copyright (C) 2023 HCL Technologies Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+ARG BASE=alpine:3.16
+FROM ${BASE} as builder
+RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
+RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
+RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev paho-mqtt-c-dev-1.3 hiredis-dev libcbor-dev iotech-iot-1.5-dev
+
+COPY scripts /device-can/scripts
+COPY src /device-can/src/
+COPY VERSION /device-can/
+
+WORKDIR /device-can
+
+RUN /device-can/scripts/build_deps.sh 1
+
+RUN /device-can/scripts/build.sh 
+
+FROM alpine:3.16
+MAINTAINER hcltech <www.hcltech.com/engineering-services>
+RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
+RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
+RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid paho-mqtt-c-dev-1.3 hiredis libcbor iotech-iot-1.5
+
+COPY --from=builder /device-can/build/release/ /
+COPY --from=builder /usr/lib/libcsdk.so /usr/lib
+COPY --from=builder /usr/share/doc/edgex-csdk /usr/share/doc/edgex-csdk
+
+COPY LICENSE /.
+COPY Attribution.txt /.
+COPY res /res
+
+LABEL license='SPDX-License-Identifier: Apache-2.0' \
+      copyright='Copyright (c) 2023 HCL Technologies Ltd'
+
+EXPOSE 59980
+ENTRYPOINT ["/device-can"]
+CMD ["-cp=consul://edgex-core-consul:8500", "--registry", "--confdir=/res"]

@@ -1,0 +1,13 @@
+name: "canprofile"
+description: "can profile description"
+apiVersion: "v3"
+
+deviceResources:
+-
+    name: "canmsg"
+    isHidden: false
+    description: "UInt32 Array for CAN msg"
+    properties: 
+        valueType: "UInt32Array"
+        readWrite: "RW"
+        units: "units"

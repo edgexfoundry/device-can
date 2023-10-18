@@ -1,0 +1,8 @@
+The following open source projects are referenced by CAN Device Service C:
+
+linux-can/can-utils (BSD-3, GPL-2.0) https://github.com/linux-can/can-utils/tree/master
+https://github.com/linux-can/can-utils/tree/master/LICENSES
+
+edgexfoundry/device-sdk-c (Apache 2.0) https://github.com/edgexfoundry/device-sdk-c/v3.0.2
+https://github.com/edgexfoundry/device-sdk-c/blob/main/LICENSE
+
