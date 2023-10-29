@@ -4,8 +4,16 @@
     "profileName": "canprofile",
     "description": "Example can device",
     "labels": [ "can", "bus" ],
-    "protocols": {
-      "Counter": { "Index": "3" }
+    "protocols": 
+    {
+            "Address":
+            {
+                    "DevInterface" : "can0",
+                    "FilterMsgId" : "123",
+                    "FilterMask" :"2047",
+                    "TimeOut" : "5"
+            }
+
    },
    "autoEvents":
     [

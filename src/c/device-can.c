@@ -8,10 +8,10 @@
  * CAN protocol interface.
  *
  * CONTRIBUTORS              COMPANY
-===============================================================
+ ===============================================================
  1. Sathya Durai           HCL Technologies Ltd (EPL Team)
  2. Vijay Annamalaisamy    HCL Technologies Ltd (EPL Team)
-*/
+ */
 
 #include <net/if.h>
 #include <sys/time.h>
@@ -37,11 +37,6 @@
 		return x.code;                                        \
 	}
 
-#define CAN_INTFC_ADDR "CanInterface"
-#define FILTER_MSG_ID1 "FilterMsgId1"
-#define FILTER_MASK1   "FilterMask1"
-#define TIMEOUT "Timeout"
-
 can_driver *impl;
 int sock_fd;
 
@@ -66,55 +61,26 @@ static void handle_sig (int sig)
 	exit(1);
 }
 
-/* Init callback; reads in config values to device driver */
-static bool can_init(void *impl, struct iot_logger_t *lc,
-		const iot_data_t *config) {
-	can_driver *driver = (can_driver *)impl;
-	bool result = false;
+int OpenCan(void *impl, const devsdk_device_t *device)
+{
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct timeval tv;
 	struct can_filter rfilter[1];
-	int64_t timeout = 0, filter = 0, mask = 0;
+	int iret = -1;
+	can_driver *driver = (can_driver *)impl;
+	end_dev_params *end_dev_params_ptr = (end_dev_params *)device->address;
 
-	iot_log_debug(driver->lc, "can_init..\n");
-
-	driver->lc = lc;
-	pthread_mutex_init(&driver->mutex, NULL);
-
-	// Read the can interface name from the configuration
-	const char *can_intfc = iot_data_string_map_get_string(config, CAN_INTFC_ADDR);
-	if (can_intfc) 
-	{
-		driver->can_intfc = iot_data_alloc_string(can_intfc, IOT_DATA_COPY);
-	} else 
-	{
-		iot_log_error(lc, "CAN Interface not in configuration");
-		driver->can_intfc = NULL;
-		return result;
-	}
+	iot_log_debug(driver->lc, "can open called..\n");
 
 	// Open the SOCKETCAN
-	if ((sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) 
+	if ((sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
 		perror("Socket");
-		return result;
+		return iret;
 	}
 
-	// Read the filter and the mask from the configuration
-	// TBD - How to set multiple filters and mask
-	filter = iot_data_string_map_get_i64(config, FILTER_MSG_ID1, 11); 
-	iot_log_debug(driver->lc, "Val of filter is %d ",filter);
-
-	mask = iot_data_string_map_get_i64(config, FILTER_MASK1, 11); 
-	iot_log_debug(driver->lc, "Val of mask is %d ",mask);
-
-	rfilter[0].can_id   = filter;
-	rfilter[0].can_mask = mask; //CAN_SFF_MASK;
-
-	// Get the interface index
-	iot_log_debug(driver->lc, "Val of interface is %s ",can_intfc);
-	strcpy(ifr.ifr_name, can_intfc );
+	strcpy(ifr.ifr_name, end_dev_params_ptr->can_interface);
 	ioctl(sock_fd, SIOCGIFINDEX, &ifr);
 
 	memset(&addr, 0, sizeof(addr));
@@ -124,28 +90,44 @@ static bool can_init(void *impl, struct iot_logger_t *lc,
 	// Bind the socket
 	if (bind(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		perror("Bind");
-		return result;
+		return iret;
 	}
 
-	// Read the timeout from the configuration and set that
-	// in the socket
-	timeout = iot_data_string_map_get_i64(config, TIMEOUT , 11);
-	iot_log_debug(driver->lc, "Val of timeout is %d ",timeout);
-	tv.tv_sec = timeout;
+	tv.tv_sec = end_dev_params_ptr->timeout;
 	tv.tv_usec = 0;
 
 	if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
 	{
-            perror("setsockopt");
-	    return result;
+		perror("setsockopt");
+		return iret;
 	}
+
+	rfilter[0].can_id   = end_dev_params_ptr->filter_msg_id;
+	rfilter[0].can_mask = end_dev_params_ptr->filter_mask; //CAN_SFF_MASK;
 
 	// Set the CAN msg ID filter
 	if (setsockopt(sock_fd, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter)) < 0)
 	{
-	    perror("setsockopt");
-	    return result;
+		perror("setsockopt");
+		return iret;
 	}
+
+	iret = 0;
+
+	return iret;
+
+}
+
+/* Init callback; reads in config values to device driver */
+static bool can_init(void *impl, struct iot_logger_t *lc,
+		const iot_data_t *config) {
+	can_driver *driver = (can_driver *)impl;
+	bool result = false;
+
+	iot_log_debug(driver->lc, "can_init..\n");
+
+	driver->lc = lc;
+	pthread_mutex_init(&driver->mutex, NULL);
 
 	result = true;
 	iot_log_debug(driver->lc, "can_init complete..\n");
@@ -169,10 +151,26 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 	struct can_frame frame;
 	uint32_t data[128] = {0};
 	int nbytes = 0;
+	int iret = -1;
+
+	end_dev_params *end_dev_params_ptr = (end_dev_params *)device->address;
 
 	if (device == NULL) {
 		return successful_get_request;
 	}
+
+	if(!end_dev_params_ptr->can_IsOpened)
+	{
+		iret = OpenCan(impl, device); 
+		if(iret != 0)
+			return successful_get_request;
+
+		end_dev_params_ptr->can_IsOpened = true;
+	} else
+	{
+		iot_log_debug(driver->lc, "CAN already opened\n");
+	}
+
 
 	// Parse and read the values
 	for (i = 0; i < nreadings; i++) {
@@ -230,47 +228,64 @@ static bool can_put_handler(void *impl, const devsdk_device_t *device,
 
 	can_driver *driver = (can_driver *)impl;
 	struct can_frame frame;
+	int iret = -1;
+	bool successful_put_request = false;
+	uint8_t i = 0, k = 0; 
 
-	bool successful_get_request = false;
-	uint8_t i = 0; 
+	end_dev_params *end_dev_params_ptr = (end_dev_params *)device->address;
 
 	pthread_mutex_lock(&driver->mutex);
 
-	// Set the iterator to the first array
-	iot_data_array_iter_t iter;
-	iot_data_array_iter (values[0], &iter);
-
-	iot_log_debug(driver->lc, "CAN: PUT on device \n");
-	iot_log_debug(driver->lc, "CAN: nvalues = %d\n", nvalues);
-
-	// Move the iterator and fill the msg ID filter
-	iot_data_array_iter_next (&iter);
-	frame.can_id = *((uint32_t *) iot_data_array_iter_value (&iter));
-	iot_log_debug(driver->lc, "can_id: %d\n", frame.can_id);
-
-	// Move the iterator and fill the data length code
-	iot_data_array_iter_next (&iter);
-	frame.can_dlc = *((uint32_t *) iot_data_array_iter_value (&iter));
-	iot_log_debug(driver->lc, "can_dlc: %d\n", frame.can_dlc);
-	for (i = 0; i<frame.can_dlc; i++)
+	if(!end_dev_params_ptr->can_IsOpened)
 	{
-		// Move the iterator and fill all the can data in the frame
+		iret = OpenCan(impl, device);
+		if(iret != 0)
+			return successful_put_request;
+
+		end_dev_params_ptr->can_IsOpened = true;
+	} else
+	{
+		iot_log_debug(driver->lc, "CAN already opened..\n");
+	}
+
+	for (k = 0; k < nvalues; k++)
+	{
+		// Set the iterator to the first array
+		iot_data_array_iter_t iter;
+		iot_data_array_iter (values[k], &iter);
+
+		iot_log_debug(driver->lc, "CAN: PUT on device \n");
+		iot_log_debug(driver->lc, "CAN: nvalues = %d\n", nvalues);
+
+		// Move the iterator and fill the msg ID filter
 		iot_data_array_iter_next (&iter);
-		frame.data[i] = *((uint32_t *) iot_data_array_iter_value (&iter));
-		iot_log_debug(driver->lc, "CAN: data[%d] = %d\n", i, frame.data[i]);
+		frame.can_id = *((uint32_t *) iot_data_array_iter_value (&iter));
+		iot_log_debug(driver->lc, "can_id: %d\n", frame.can_id);
+
+		// Move the iterator and fill the data length code
+		iot_data_array_iter_next (&iter);
+		frame.can_dlc = *((uint32_t *) iot_data_array_iter_value (&iter));
+		iot_log_debug(driver->lc, "can_dlc: %d\n", frame.can_dlc);
+		for (i = 0; i<frame.can_dlc; i++)
+		{
+			// Move the iterator and fill all the can data in the frame
+			iot_data_array_iter_next (&iter);
+			frame.data[i] = *((uint32_t *) iot_data_array_iter_value (&iter));
+			iot_log_debug(driver->lc, "CAN: data[%d] = %d\n", i, frame.data[i]);
+		}
+
+		// Write the can frame to the socket
+		if (write(sock_fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+			perror("Write");
+			return 1;
+		}
 	}
 
-        // Write the can frame to the socket
-	if (write(sock_fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-		perror("Write");
-		return 1;
-	}
-
-	successful_get_request = true;
+	successful_put_request = true;
 
 	pthread_mutex_unlock(&driver->mutex);
 
-	return successful_get_request;
+	return successful_put_request;
 }
 
 static void can_stop(void *impl, bool force) {
@@ -281,7 +296,87 @@ static void can_stop(void *impl, bool force) {
 static devsdk_address_t can_create_address(void *impl,
 		const devsdk_protocols *protocols,
 		iot_data_t **exception) {
-	return (devsdk_address_t)protocols;
+	can_driver *driver = (can_driver *)impl;
+	char *end = NULL;
+	errno = 0;
+	iot_log_debug (driver->lc, "can_create_address called..!!\n");
+
+	end_dev_params *end_dev_params_ptr = (end_dev_params *)malloc(sizeof(end_dev_params));
+	memset(end_dev_params_ptr, 0x00, sizeof(end_dev_params));
+
+	const iot_data_t *props = devsdk_protocols_properties (protocols, "Address");
+	if (props == NULL)
+	{
+		*exception = iot_data_alloc_string ("No Address present", IOT_DATA_REF);
+		return NULL;
+	}
+
+	// Get CAN Interface
+	const char *params_ptr = iot_data_string_map_get_string(props, "DevInterface");
+	if (params_ptr == NULL) {
+		*exception = iot_data_alloc_string("DevInterface in device address missing",
+				IOT_DATA_REF);
+		return false;
+	}
+	strcpy(end_dev_params_ptr->can_interface, params_ptr);
+
+	// Get CAN Filter Msg ID
+	params_ptr = iot_data_string_map_get_string(props, "FilterMsgId");
+	if (params_ptr == NULL)
+	{
+		*exception = iot_data_alloc_string("FilterMsgId in device address missing",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	end_dev_params_ptr->filter_msg_id = strtoul(params_ptr, &end, 0);
+	if(end_dev_params_ptr->filter_msg_id == 0 && (errno != 0))
+	{
+		*exception = iot_data_alloc_string("FilterMsgId access error",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	// Get Filter Mask
+	params_ptr = iot_data_string_map_get_string(props, "FilterMask");
+	if (params_ptr == NULL)
+	{
+		*exception = iot_data_alloc_string("FilterMask in device address missing",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	end_dev_params_ptr->filter_mask = strtoul(params_ptr, &end, 0);
+	if(end_dev_params_ptr->filter_mask == 0 && (errno != 0))
+	{
+		*exception = iot_data_alloc_string("FilterMask access error",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	// Get TimeOut
+	params_ptr = iot_data_string_map_get_string(props, "TimeOut");
+	if (params_ptr == NULL)
+	{
+		*exception = iot_data_alloc_string("TimeOut in device address missing",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	end_dev_params_ptr->timeout = strtoul(params_ptr, &end, 0);
+	if(end_dev_params_ptr->timeout == 0 && (errno != 0))
+	{
+		*exception = iot_data_alloc_string("TimeOut access error",
+				IOT_DATA_REF);
+		return false;
+	}
+
+	iot_log_debug (driver->lc, "CAN Interface %s\n", end_dev_params_ptr->can_interface);
+	iot_log_debug (driver->lc, "Filter Msg Id %d\n", end_dev_params_ptr->filter_msg_id);
+	iot_log_debug (driver->lc, "Filter Mask%d\n", end_dev_params_ptr->filter_mask);
+	iot_log_debug (driver->lc, "Timeout %d\n", end_dev_params_ptr->timeout);
+
+	return (devsdk_address_t)end_dev_params_ptr;
 }
 
 static void can_free_address(void *impl, devsdk_address_t address) {
@@ -341,12 +436,7 @@ int main(int argc, char *argv[]) {
 	sigaction (SIGTERM, &sa, NULL);
 	sigaction (SIGSEGV, &sa, NULL);
 
-	/* Create default Driver config and start the device service */
 	iot_data_t *driver_map = iot_data_alloc_map(IOT_DATA_STRING);
-	iot_data_string_map_add(driver_map, CAN_INTFC_ADDR, iot_data_alloc_string("can", IOT_DATA_REF));
-	iot_data_string_map_add(driver_map, FILTER_MSG_ID1, iot_data_alloc_i64(100));
-	iot_data_string_map_add(driver_map, FILTER_MASK1, iot_data_alloc_i64(100));
-	iot_data_string_map_add(driver_map, TIMEOUT, iot_data_alloc_i64(10));
 
 	devsdk_service_start(service, driver_map, &e);
 	ERR_CHECK(e);

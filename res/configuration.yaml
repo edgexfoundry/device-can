@@ -26,12 +26,6 @@ Device:
   ProfilesDir: "./res/profiles"
   DevicesDir: "./res/devices"
 
-Driver:
-  CanInterface: "can0"
-  FilterMsgId1: 123
-  FilterMask1: 2047 #7FF
-  Timeout: 5
-
 MessageBus:
   Protocol: "redis"
   Host: "localhost"
