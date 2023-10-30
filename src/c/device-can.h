@@ -35,6 +35,7 @@ typedef struct {
   uint32_t filter_mask;
   uint8_t  timeout;
   bool can_IsOpened;
+  int sock_fd;
 } end_dev_params;
 
 /**

@@ -38,7 +38,6 @@
 	}
 
 can_driver *impl;
-int sock_fd;
 
 /* variable to control the service execution */
 volatile sig_atomic_t quit = 0;
@@ -74,21 +73,21 @@ int OpenCan(void *impl, const devsdk_device_t *device)
 	iot_log_debug(driver->lc, "can open called..\n");
 
 	// Open the SOCKETCAN
-	if ((sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
+	if ((end_dev_params_ptr->sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
 		perror("Socket");
 		return iret;
 	}
 
 	strcpy(ifr.ifr_name, end_dev_params_ptr->can_interface);
-	ioctl(sock_fd, SIOCGIFINDEX, &ifr);
+	ioctl(end_dev_params_ptr->sock_fd, SIOCGIFINDEX, &ifr);
 
 	memset(&addr, 0, sizeof(addr));
 	addr.can_family = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	// Bind the socket
-	if (bind(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+	if (bind(end_dev_params_ptr->sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		perror("Bind");
 		return iret;
 	}
@@ -96,7 +95,7 @@ int OpenCan(void *impl, const devsdk_device_t *device)
 	tv.tv_sec = end_dev_params_ptr->timeout;
 	tv.tv_usec = 0;
 
-	if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
+	if (setsockopt(end_dev_params_ptr->sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
 	{
 		perror("setsockopt");
 		return iret;
@@ -106,7 +105,7 @@ int OpenCan(void *impl, const devsdk_device_t *device)
 	rfilter[0].can_mask = end_dev_params_ptr->filter_mask; //CAN_SFF_MASK;
 
 	// Set the CAN msg ID filter
-	if (setsockopt(sock_fd, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter)) < 0)
+	if (setsockopt(end_dev_params_ptr->sock_fd, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter)) < 0)
 	{
 		perror("setsockopt");
 		return iret;
@@ -180,7 +179,7 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 				requests[i].resource->type);
 
 		// Read the socket interface for the CAN frame
-		nbytes = read(sock_fd, &frame, sizeof(struct can_frame));
+		nbytes = read(end_dev_params_ptr->sock_fd, &frame, sizeof(struct can_frame));
 		iot_log_debug(driver->lc, "CAN:nbytes=%d\n", nbytes);
 		if (nbytes <= 0) {
 			perror("Read");
@@ -275,7 +274,7 @@ static bool can_put_handler(void *impl, const devsdk_device_t *device,
 		}
 
 		// Write the can frame to the socket
-		if (write(sock_fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+		if (write(end_dev_params_ptr->sock_fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
 			perror("Write");
 			return 1;
 		}
@@ -304,10 +303,10 @@ static devsdk_address_t can_create_address(void *impl,
 	end_dev_params *end_dev_params_ptr = (end_dev_params *)malloc(sizeof(end_dev_params));
 	memset(end_dev_params_ptr, 0x00, sizeof(end_dev_params));
 
-	const iot_data_t *props = devsdk_protocols_properties (protocols, "Address");
+	const iot_data_t *props = devsdk_protocols_properties (protocols, "CAN");
 	if (props == NULL)
 	{
-		*exception = iot_data_alloc_string ("No Address present", IOT_DATA_REF);
+		*exception = iot_data_alloc_string ("CAN field not present", IOT_DATA_REF);
 		return NULL;
 	}
 

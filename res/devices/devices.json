@@ -6,7 +6,7 @@
     "labels": [ "can", "bus" ],
     "protocols": 
     {
-            "Address":
+            "CAN":
             {
                     "DevInterface" : "can0",
                     "FilterMsgId" : "123",
