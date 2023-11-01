@@ -126,7 +126,6 @@ static bool can_init(void *impl, struct iot_logger_t *lc,
 	iot_log_debug(driver->lc, "can_init..\n");
 
 	driver->lc = lc;
-	pthread_mutex_init(&driver->mutex, NULL);
 
 	result = true;
 	iot_log_debug(driver->lc, "can_init complete..\n");
@@ -144,7 +143,6 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 		const iot_data_t *options,
 		iot_data_t **exception) {
 	can_driver *driver = (can_driver *)impl;
-	pthread_mutex_lock(&driver->mutex);
 	bool successful_get_request = false;
 	uint32_t i = 0, j = 0, k = 0;
 	struct can_frame frame;
@@ -154,15 +152,16 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 
 	end_dev_params *end_dev_params_ptr = (end_dev_params *)device->address;
 
-	if (device == NULL) {
-		return successful_get_request;
-	}
+	pthread_mutex_lock(&end_dev_params_ptr->mutex);
 
 	if(!end_dev_params_ptr->can_IsOpened)
 	{
 		iret = OpenCan(impl, device); 
 		if(iret != 0)
+		{
+			pthread_mutex_unlock(&end_dev_params_ptr->mutex);
 			return successful_get_request;
+		}
 
 		end_dev_params_ptr->can_IsOpened = true;
 	} else
@@ -209,7 +208,7 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 		}
 	}
 
-	pthread_mutex_unlock(&driver->mutex);
+	pthread_mutex_unlock(&end_dev_params_ptr->mutex);
 
 	return successful_get_request;
 }
@@ -233,13 +232,16 @@ static bool can_put_handler(void *impl, const devsdk_device_t *device,
 
 	end_dev_params *end_dev_params_ptr = (end_dev_params *)device->address;
 
-	pthread_mutex_lock(&driver->mutex);
+	pthread_mutex_lock(&end_dev_params_ptr->mutex);
 
 	if(!end_dev_params_ptr->can_IsOpened)
 	{
 		iret = OpenCan(impl, device);
 		if(iret != 0)
+		{
+			pthread_mutex_unlock(&end_dev_params_ptr->mutex);
 			return successful_put_request;
+		}
 
 		end_dev_params_ptr->can_IsOpened = true;
 	} else
@@ -276,20 +278,19 @@ static bool can_put_handler(void *impl, const devsdk_device_t *device,
 		// Write the can frame to the socket
 		if (write(end_dev_params_ptr->sock_fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
 			perror("Write");
-			return 1;
+			pthread_mutex_unlock(&end_dev_params_ptr->mutex);
+			return successful_put_request;
 		}
 	}
 
 	successful_put_request = true;
 
-	pthread_mutex_unlock(&driver->mutex);
+	pthread_mutex_unlock(&end_dev_params_ptr->mutex);
 
 	return successful_put_request;
 }
 
 static void can_stop(void *impl, bool force) {
-	can_driver *driver = (can_driver *)impl;
-	pthread_mutex_destroy(&driver->mutex);
 }
 
 static devsdk_address_t can_create_address(void *impl,
@@ -301,7 +302,16 @@ static devsdk_address_t can_create_address(void *impl,
 	iot_log_debug (driver->lc, "can_create_address called..!!\n");
 
 	end_dev_params *end_dev_params_ptr = (end_dev_params *)malloc(sizeof(end_dev_params));
+	if (end_dev_params_ptr == NULL)
+        {
+                *exception = iot_data_alloc_string ("end_dev_params_ptr - malloc failed", IOT_DATA_REF);
+                return NULL;
+        }
+
 	memset(end_dev_params_ptr, 0x00, sizeof(end_dev_params));
+
+	// Initialize CAN interface specific mutex
+	pthread_mutex_init(&end_dev_params_ptr->mutex, NULL);
 
 	const iot_data_t *props = devsdk_protocols_properties (protocols, "CAN");
 	if (props == NULL)
@@ -380,6 +390,8 @@ static devsdk_address_t can_create_address(void *impl,
 
 static void can_free_address(void *impl, devsdk_address_t address) {
 	if (address != NULL) {
+		end_dev_params *end_dev_params_ptr = (end_dev_params *)address;
+		pthread_mutex_destroy(&end_dev_params_ptr->mutex);
 		free(address);
 	} 
 }

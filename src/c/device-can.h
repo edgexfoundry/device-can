@@ -36,6 +36,7 @@ typedef struct {
   uint8_t  timeout;
   bool can_IsOpened;
   int sock_fd;
+  pthread_mutex_t mutex; //for interface specific synchronization
 } end_dev_params;
 
 /**
@@ -44,7 +45,6 @@ typedef struct {
 typedef struct can_driver {
   iot_logger_t *lc;
   devsdk_service_t *service;
-  pthread_mutex_t mutex; //for synchronization
 } can_driver;
 
 int OpenCan(void *impl, const devsdk_device_t *device);
