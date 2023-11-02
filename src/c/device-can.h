@@ -28,15 +28,26 @@
 extern "C" {
 #endif
 
+
+typedef struct {
+  char can_interface[32];
+  uint32_t filter_msg_id;
+  uint32_t filter_mask;
+  uint8_t  timeout;
+  bool can_IsOpened;
+  int sock_fd;
+  pthread_mutex_t mutex; //for interface specific synchronization
+} end_dev_params;
+
 /**
  * device-can specific data included with service callbacks
  */
 typedef struct can_driver {
   iot_logger_t *lc;
   devsdk_service_t *service;
-  iot_data_t *can_intfc;
-  pthread_mutex_t mutex; //for synchronization
 } can_driver;
+
+int OpenCan(void *impl, const devsdk_device_t *device);
 
 extern can_driver *impl;
 #ifdef __cplusplus
