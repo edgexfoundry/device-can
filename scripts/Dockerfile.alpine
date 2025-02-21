@@ -14,11 +14,15 @@
 # limitations under the License.
 #
 
-ARG BASE=alpine:3.18
-FROM ${BASE} as builder
+# Use alpine:3.16 as the base image because starting from alpine:3.17, the execinfo library has been removed.
+# The execinfo library is required by the current implementation of the handle_sig function in device-can.c.
+# If switching to a newer alpine version, modifications to the handle_sig function will be necessary
+# to eliminate the dependency on execinfo (e.g., by replacing it with libunwind or similar).
+ARG BASE_TEMPORARY=alpine:3.16
+FROM ${BASE_TEMPORARY} as builder
 RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
-RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev paho-mqtt-c-dev-1.3 hiredis-dev libcbor-dev iotech-iot-1.5-dev
+RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev iotech-paho-mqtt-c-dev-1.3 hiredis-dev libcbor-dev iotech-iot-1.5-dev libexecinfo-dev
 
 COPY scripts /device-can/scripts
 COPY src /device-can/src/
@@ -28,14 +32,14 @@ WORKDIR /device-can
 
 RUN /device-can/scripts/build_deps.sh 1
 
-RUN /device-can/scripts/build.sh 
+RUN /device-can/scripts/build.sh && test -f /device-can/build/release/device-can
 
-FROM alpine:3.18
+FROM alpine:3.16
 MAINTAINER hcltech <www.hcltech.com/engineering-services>
 RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
 
-RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid paho-mqtt-c-dev-1.3 hiredis libcbor iotech-iot-1.5 dumb-init
+RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid iotech-paho-mqtt-c-dev-1.3 hiredis libcbor iotech-iot-1.5 dumb-init libexecinfo
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
 RUN apk --no-cache upgrade
 
@@ -52,4 +56,4 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 EXPOSE 59980
 ENTRYPOINT ["/device-can"]
-CMD ["-cp=consul://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=keeper://edgex-core-keeper:59890", "--registry", "--confdir=/res"]
