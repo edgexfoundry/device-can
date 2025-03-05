@@ -2,8 +2,6 @@
 ## EdgeX Can Device Service
 [Github repository](https://github.com/edgexfoundry/device-can)
 
-## [4.0.0] Odessa - 2025-03-12 (Only compatible with the 4.x releases)
-
 ### Change Logs for EdgeX Dependencies
 - [go-mod-bootstrap](https://github.com/edgexfoundry/go-mod-bootstrap/blob/main/CHANGELOG.md)
 - [go-mod-core-contracts](https://github.com/edgexfoundry/go-mod-core-contracts/blob/main/CHANGELOG.md)
@@ -11,6 +9,8 @@
 - [go-mod-registry](https://github.com/edgexfoundry/go-mod-registry/blob/main/CHANGELOG.md) 
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md) (indirect dependency)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
+
+## [4.0.0] Odessa - 2025-03-12 (Only compatible with the 4.x releases)
 
 ### ✨ Features
 
