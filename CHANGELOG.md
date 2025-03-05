@@ -16,7 +16,6 @@
 
 - CAN device service initializtion ([a4e73bd…](https://github.com/edgexfoundry/device-can/commit/a4e73bd9226373ebdc5868fd94a5aa5cefc768f2))
 
-
 ### 🐛 Bug Fixes
 
 - Address CVE in Alpine base image ([18b319e…](https://github.com/edgexfoundry/device-can/commit/18b319e9983d73c9acd8186c05150f8b3aecab05))
