@@ -1,60 +1,16 @@
 Writable:
-  LogLevel: DEBUG
-  Device:
-    DataTransform: true
-    MaxCmdOps: 128
-    Discovery:
-      Enabled: false
+  LogLevel: INFO
 
 Service:
-  HealthCheckInterval: "10s"
-  ServerBindAddr: "0.0.0.0" # blank value defaults to hostname
+  Host: localhost
   Port: 59999
   StartupMsg: "CAN device service started.."
   RequestTimeout: "15s"
-
-Clients:
-  core-metadata:
-    Host: "127.0.0.1"
-    Port: 59881
-
-  core-data:
-    Host: "127.0.0.1"
-    Port: 59880
 
 Device:
   ProfilesDir: "./res/profiles"
   DevicesDir: "./res/devices"
 
 MessageBus:
-  Protocol: "redis"
-  Host: "localhost"
-  Port: 6379
-  Type: "redis"
-  AuthMode: "usernamepassword"  # required for redis messagebus (secure or insecure)
-  SecretName: "redisdb"
-  PublishTopicPrefix: "edgex/events/device"
   Optional:
     ClientId: "device-can"
-    Qos: 0 # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
-    KeepAliveo: 10 # Seconds (must be 2 or greater)
-    Retainedi: false
-    SkipCertVerify: false
-  Topics:
-    CommandRequestTopic: "edgex/device/command/request/device-can/#"   # subscribing for inbound command requests
-    CommandResponseTopicPrefix: "edgex/device/command/response"   # publishing outbound command responses; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
-
-SecretStore:
-  Type: "vault"
-  Protocol: "http"
-  Host: "localhost"
-  Port: 8200
-  Path: "device-can/"
-  TokenFile: "/tmp/edgex/secrets/device-can/secrets-token.json"
-  RootCaCertPath: ""
-  ServerName: ""
-  # Uncomment to seed service secrets file
-  # SecretsFile = "/tmp/edgex/secrets/device-can/secrets.json"
-  DisableScrubSecretsFile: false
-  Authentication:
-    AuthType: "X-Vault-Token"
