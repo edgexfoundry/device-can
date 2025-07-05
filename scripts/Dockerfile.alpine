@@ -18,7 +18,7 @@
 # The execinfo library is required by the current implementation of the handle_sig function in device-can.c.
 # If switching to a newer alpine version, modifications to the handle_sig function will be necessary
 # to eliminate the dependency on execinfo (e.g., by replacing it with libunwind or similar).
-ARG BASE_TEMPORARY=alpine:3.16
+ARG BASE_TEMPORARY=alpine:3.21.3
 FROM ${BASE_TEMPORARY} as builder
 RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
@@ -34,7 +34,7 @@ RUN /device-can/scripts/build_deps.sh 1
 
 RUN /device-can/scripts/build.sh && test -f /device-can/build/release/device-can
 
-FROM alpine:3.16
+FROM alpine:3.21.3
 MAINTAINER hcltech <www.hcltech.com/engineering-services>
 RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
 RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
