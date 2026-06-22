@@ -12,7 +12,7 @@ set -e -x
 
 BUILD_CSDK=$1
 
-CSDK_VERSION=4.0.0
+CSDK_VERSION=4.0.2
 
 if [ -d deps ]
 then
