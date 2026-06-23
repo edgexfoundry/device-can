@@ -26,8 +26,6 @@
 #include <iot/data.h>
 #include "device-can.h"
 
-#include <execinfo.h>
-
 #include "devsdk/devsdk.h"
 #define ERR_CHECK(x)                                      \
 	if (x.code) {                                           \
@@ -45,18 +43,7 @@ volatile sig_atomic_t quit = 0;
 /* signal handler to catch the signals */
 static void handle_sig (int sig)
 {
-	void *array[10];
-	size_t size;
-
-	quit = 1;
-
-	// get void*'s for all entries on the stack
-	size = backtrace(array, 10);
-
-	// print out all the frames to stderr
 	fprintf(stderr, "Error: signal %d:\n", sig);
-	backtrace_symbols_fd(array, size, STDERR_FILENO);
-
 	exit(1);
 }
 
@@ -140,6 +127,7 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 		uint32_t nreadings,
 		const devsdk_commandrequest *requests,
 		devsdk_commandresult *readings,
+		iot_data_t **tags,
 		const iot_data_t *options,
 		iot_data_t **exception) {
 	can_driver *driver = (can_driver *)impl;
@@ -174,8 +162,8 @@ static bool can_get_handler(void *impl, const devsdk_device_t *device,
 	for (i = 0; i < nreadings; i++) {
 		iot_log_debug(driver->lc, "CAN:Triggering Get events resource name=%s\n",
 				requests[i].resource->name);
-		iot_log_debug(driver->lc, "CAN:Triggering Get events req type=%d\n",
-				requests[i].resource->type);
+		iot_log_debug(driver->lc, "CAN:Triggering Get events req type=%s",
+				iot_data_type_string (requests[i].resource->type.type));
 
 		// Read the socket interface for the CAN frame
 		nbytes = read(end_dev_params_ptr->sock_fd, &frame, sizeof(struct can_frame));
